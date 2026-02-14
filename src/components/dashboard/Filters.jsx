@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertTriangle, Calendar } from 'lucide-react';
-import { Grid, Paper, Typography, Box, Select, MenuItem, FormControl } from '@mui/material';
+import { Grid, Paper, Typography, Box, MenuItem, TextField } from '@mui/material';
 import SearchableDropdown from '../common/SearchableDropdown';
 
 const Filters = ({ 
@@ -43,25 +43,43 @@ const Filters = ({
                      <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
                         Select Date
                      </Typography>
-                     <FormControl fullWidth size="small" variant="standard">
-                       <Select
-                          value={selectedDate}
-                          onChange={(e) => setSelectedDate(e.target.value)}
-                          disabled={!isDataLoaded}
-                          disableUnderline
-                          sx={{ 
-                            color: 'white', 
-                            fontSize: '1.125rem', 
-                            fontWeight: 'bold',
-                            '& .MuiSelect-select': { padding: 0 }
-                          }}
-                       >
-                          <MenuItem value="All">All Dates</MenuItem>
-                          {uniqueDateOptions.map((date) => (
-                              <MenuItem key={date} value={date}>{date}</MenuItem>
-                          ))}
-                       </Select>
-                     </FormControl>
+                     <TextField
+                        select
+                        fullWidth
+                        size="small"
+                        value={selectedDate}
+                        onChange={(e) => setSelectedDate(e.target.value)}
+                        disabled={!isDataLoaded}
+                        variant="outlined"
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                backgroundColor: 'rgba(51, 65, 85, 0.5)', // slate-700/50
+                                color: 'white',
+                                '& fieldset': {
+                                    borderColor: '#475569', // slate-600
+                                },
+                                '&:hover fieldset': {
+                                    borderColor: '#94a3b8', // slate-400
+                                },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: '#3b82f6', // blue-500
+                                },
+                            },
+                            '& .MuiSelect-select': { 
+                                display: 'flex', 
+                                alignItems: 'center',
+                                fontWeight: 'bold' 
+                            },
+                            '& .MuiSvgIcon-root': {
+                                color: '#94a3b8', // slate-400
+                            }
+                        }}
+                     >
+                        <MenuItem value="All">All Dates</MenuItem>
+                        {uniqueDateOptions.map((date) => (
+                            <MenuItem key={date} value={date}>{date}</MenuItem>
+                        ))}
+                     </TextField>
                  </Box>
             </Paper>
         </Grid>

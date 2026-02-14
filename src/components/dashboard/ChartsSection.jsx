@@ -1,9 +1,10 @@
 import React from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Label,
-  PieChart, Pie, Cell, Legend
+  PieChart, Pie, Cell, Legend,
+  LineChart, Line
 } from 'recharts';
-import { ListFilter, RotateCcw } from 'lucide-react';
+import { ListFilter, RotateCcw, TrendingUp } from 'lucide-react';
 import { Card, CardContent, Grid, Typography, Box, Select, MenuItem, IconButton, Tooltip } from '@mui/material';
 
 const ChartsSection = ({ 
@@ -14,7 +15,8 @@ const ChartsSection = ({
   selectedSerial, 
   setSelectedSerial,
   targetError,
-  getMachineName
+  getMachineName,
+  selectedErrorLabel
 }) => {
   return (
     <Grid container spacing={3}>
@@ -162,6 +164,73 @@ const ChartsSection = ({
                       />
                     </PieChart>
                   </ResponsiveContainer>
+                </Box>
+            </CardContent>
+        </Card>
+      </Grid>
+
+      {/* Line Chart */}
+      <Grid item size={{ xs: 12 }} sx={{ width: '100%' }}>
+        <Card sx={{ height: '100%' }}>
+            <CardContent>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box component="span" sx={{ width: 4, height: 24, bgcolor: 'success.main', borderRadius: 1 }} />
+                      <TrendingUp size={20} className="text-green-500"/>
+                      Error Trend Over Time
+                  </Typography>
+                  <Box sx={{ mt: 1, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                      <Box sx={{ bgcolor: 'rgba(51, 65, 85, 0.5)', px: 1.5, py: 0.5, borderRadius: 1, border: 1, borderColor: 'divider' }}>
+                          <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>Error Code:</Typography>
+                          <Typography variant="body2" component="span" fontWeight="bold" color="secondary.main">
+                              {selectedErrorLabel}
+                          </Typography>
+                      </Box>
+                      <Box sx={{ bgcolor: 'rgba(51, 65, 85, 0.5)', px: 1.5, py: 0.5, borderRadius: 1, border: 1, borderColor: 'divider' }}>
+                          <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>Machine:</Typography>
+                          <Typography variant="body2" component="span" fontWeight="bold" color="primary.main">
+                              {selectedSerial ? getMachineName(selectedSerial) : 'All Machines'}
+                          </Typography>
+                      </Box>
+                  </Box>
+                </Box>
+
+                <Box sx={{ height: 400 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                            data={processedData.lineChartData}
+                            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                        >
+                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                            <XAxis 
+                                dataKey="date" 
+                                stroke="#94a3b8" 
+                                fontSize={12} 
+                                tick={{ fill: '#94a3b8' }}
+                            />
+                            <YAxis 
+                                stroke="#94a3b8" 
+                                fontSize={12} 
+                                tick={{ fill: '#94a3b8' }}
+                            >
+                                <Label value="Error Count" angle={-90} position="insideLeft" style={{ textAnchor: 'middle' }} fill="#94a3b8" />
+                            </YAxis>
+                            <RechartsTooltip
+                                contentStyle={{ backgroundColor: '#1e293b', borderRadius: '8px', border: '1px solid #334155', color: '#fff' }}
+                                itemStyle={{ color: '#fff' }}
+                                cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                            />
+                            <Line 
+                                type="monotone" 
+                                dataKey="count" 
+                                stroke="#10b981" // emerald-500
+                                strokeWidth={3}
+                                dot={{ fill: '#10b981', r: 4, strokeWidth: 2, stroke: '#fff' }}
+                                activeDot={{ r: 6, strokeWidth: 0 }}
+                                animationDuration={1000}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
                 </Box>
             </CardContent>
         </Card>

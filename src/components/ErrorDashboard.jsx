@@ -95,7 +95,8 @@ const ErrorDashboard = () => {
         const entry = {};
         
         headers.forEach((header, index) => {
-            entry[header] = values[index] || '';
+            const rawValue = values[index] || '';
+            entry[header.trim()] = rawValue.trim();
         });
 
         if (entry['Time']) {
@@ -257,6 +258,27 @@ const ErrorDashboard = () => {
         pieColors = ['#f59e0b', '#334155'];
     }
 
+    // Line Chart Data
+    // Filter by BOTH error (targetError) AND machine (selectedSerial if active)
+    const lineChartRawData = rawData.filter(item => {
+        const isTargetError = targetError === 'All' || (item['Error Number'] || '') === targetError;
+        const isTargetMachine = !selectedSerial || (item['Serial Number'] || 'Unknown') === selectedSerial;
+        // Note: We intentionally DO NOT filter by selectedDate for the Line Chart 
+        // because the Line Chart purpose is to show the trend over time (Active Days).
+        return isTargetError && isTargetMachine;
+    });
+
+    const lineChartDateMap = {};
+    lineChartRawData.forEach(item => {
+        if (item.dateStr && item.dateStr !== 'Unknown' && item.dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            lineChartDateMap[item.dateStr] = (lineChartDateMap[item.dateStr] || 0) + 1;
+        }
+    });
+
+    const lineChartData = Object.keys(lineChartDateMap)
+        .map(date => ({ date, count: lineChartDateMap[date] }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
     return { 
       filteredData: filtered, 
       serialCounts, 
@@ -264,7 +286,8 @@ const ErrorDashboard = () => {
       totalErrors: targetCount, 
       topMachine,
       pieData,
-      pieColors
+      pieColors,
+      lineChartData
     };
   }, [rawData, targetError, selectedSerial, machineMapping, selectedDate]);
 
@@ -283,7 +306,9 @@ const ErrorDashboard = () => {
   };
 
   // Helper to find label for selected error
-  const selectedErrorLabel = targetError === 'All' ? 'All Error Codes' : (uniqueErrorOptions.find(o => o.code === targetError)?.label || targetError);
+  const selectedErrorLabel = targetError === 'All' 
+    ? 'All Error Codes' 
+    : (uniqueErrorOptions.find(o => String(o.code).trim() === String(targetError).trim())?.label || targetError);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 3, overflowX: 'hidden' }}>
@@ -339,18 +364,18 @@ const ErrorDashboard = () => {
                                 <Typography variant="body2" color="text.secondary">{getFormattedDate()}</Typography>
                              </Box>
                              <Grid container spacing={2}>
-                                <Grid item xs={6}>
-                                    <Box sx={{ bgcolor: 'rgba(15, 23, 42, 0.5)', p: 1.5, borderRadius: 1, border: 1, borderColor: 'divider' }}>
+                                <Grid item size={{ xs: 12, md: 6 }} sx={{ width: '100%' }}>
+                                    <Box sx={{ bgcolor: 'rgba(15, 23, 42, 0.5)', p: 1.5, borderRadius: 1, border: 1, borderColor: 'divider', width: '100%' }}>
                                         <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', display: 'block' }}>
                                             Target Error:
                                         </Typography>
-                                        <Typography variant="body1" fontWeight="bold" sx={{ fontFamily: 'monospace', color: 'secondary.main' }}>
+                                        <Typography variant="body1" fontWeight="bold" sx={{ fontFamily: 'monospace', color: 'secondary.main', wordBreak: 'break-all' }}>
                                             {selectedErrorLabel}
                                         </Typography>
                                     </Box>
                                 </Grid>
-                                <Grid item xs={6}>
-                                    <Box sx={{ bgcolor: 'rgba(15, 23, 42, 0.5)', p: 1.5, borderRadius: 1, border: 1, borderColor: 'divider' }}>
+                                <Grid item size={{ xs: 12, md: 6 }} sx={{ width: '100%' }}>
+                                    <Box sx={{ bgcolor: 'rgba(15, 23, 42, 0.5)', p: 1.5, borderRadius: 1, border: 1, borderColor: 'divider', width: '100%' }}>
                                         <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', display: 'block' }}>
                                             Filter Date:
                                         </Typography>
@@ -380,6 +405,7 @@ const ErrorDashboard = () => {
                     setSelectedSerial={setSelectedSerial}
                     targetError={targetError}
                     getMachineName={getMachineName}
+                    selectedErrorLabel={selectedErrorLabel}
                   />
     
                 </Box>
