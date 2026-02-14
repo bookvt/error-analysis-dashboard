@@ -22,3 +22,8 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
+/* Remove default focus outline from Recharts */
+.recharts-wrapper *:focus {
+  outline: none;
+}

@@ -373,6 +373,13 @@ const ErrorDashboard = () => {
   }, [rawData, targetError, selectedSerial, machineMapping, selectedDate]);
 
   const handleBarClick = (data) => {
+    // Handle click from Bar component (direct data)
+    if (data && data.serial) {
+        setSelectedSerial(prev => prev === data.serial ? null : data.serial);
+        return;
+    }
+
+    // Fallback: Handle click from BarChart (if event bubbles up)
     if (data && data.activePayload && data.activePayload.length > 0) {
         const clickedSerial = data.activePayload[0].payload.serial;
         setSelectedSerial(prev => prev === clickedSerial ? null : clickedSerial);
@@ -601,8 +608,6 @@ const ErrorDashboard = () => {
                         data={processedData.serialCounts.slice(0, topMachineCount)} 
                         layout="vertical" 
                         margin={{ left: 20, right: 30, bottom: 20 }}
-                        onClick={handleBarClick}
-                        cursor="pointer"
                       >
                         <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#334155" />
                         <XAxis type="number" stroke="#94a3b8" fontSize={12}>
@@ -616,13 +621,21 @@ const ErrorDashboard = () => {
                           itemStyle={{ color: '#fff' }}
                           cursor={{fill: '#334155', opacity: 0.4}}
                         />
-                        <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={24} isAnimationActive={true}>
+                        <Bar 
+                            dataKey="count" 
+                            radius={[0, 4, 4, 0]} 
+                            barSize={24} 
+                            isAnimationActive={true}
+                            onClick={handleBarClick}
+                            cursor="pointer"
+                        >
                            {processedData.serialCounts.slice(0, topMachineCount).map((entry, index) => (
                              <Cell 
                                key={`cell-${index}`} 
                                fill={entry.serial === selectedSerial ? '#ec4899' : '#3b82f6'} 
                                stroke={entry.serial === selectedSerial ? '#fff' : 'none'}
                                strokeWidth={2}
+                               cursor="pointer"
                              />
                            ))}
                         </Bar>
