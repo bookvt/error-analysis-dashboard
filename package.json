@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "http://bookvt.github.io/error-analysis-dashboard",
+  "homepage": "https://bookvt.github.io/error-analysis-dashboard",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
