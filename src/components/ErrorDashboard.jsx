@@ -1,126 +1,32 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Label,
-  PieChart, Pie, Cell, Legend
-} from 'recharts';
-import { Upload, FileText, AlertTriangle, Activity, Calendar, Filter, Download, Loader2, ChevronDown, ListFilter, RotateCcw, FileSpreadsheet, Search, X } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { FileText } from 'lucide-react';
+import { Box, Container, Typography, Paper, Grid } from '@mui/material';
 
-// --- DEFAULT MAPPING ---
-const DEFAULT_MAPPING = {
-  "26090": "VFT#1", "26056": "VFT#2", "26112": "VFT#3", "26096": "VFT#4", "26128": "VFT#5",
-  "26217": "VFT#6", "26100": "VFT#7", "26325": "VFT#8", "26288": "VFT#9", "26099": "VFT#10",
-  "26225": "VFT#11", "26125": "VFT#12", "26127": "VFT#13", "26200": "VFT#14", "26154": "VFT#15",
-  "26190": "VFT#16", "26461": "VFT#17", "26336": "VFT#18", "26371": "VFT#19", "26324": "VFT#20",
-  "26571": "VFT#21", "26573": "VFT#22", "26572": "VFT#23", "26574": "VFT#24", "26689": "VFT#25",
-  "26690": "VFT#26", "26735": "VFT#27", "26736": "VFT#28", "28126": "VFT#29", "28127": "VFT#30",
-  "28210": "VFT#31", "28211": "VFT#32", "28256": "VFT#33"
-};
+// Constants & Utils
+import { DEFAULT_MAPPING } from '../constants/mappings';
+import { getFormattedDate, parseCSVLine } from '../utils/helpers';
 
-// --- Custom Searchable Dropdown Component ---
-const SearchableDropdown = ({ options, value, onChange, disabled, placeholder = "Select..." }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const filteredOptions = options.filter(opt => 
-    opt.label.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    opt.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const selectedOption = options.find(opt => opt.code === value);
-
-  return (
-    <div className="relative w-full" ref={dropdownRef}>
-      <div 
-        className={`w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 flex items-center justify-between cursor-pointer hover:bg-slate-700 transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-      >
-        <span className="text-white font-mono truncate mr-2">
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
-        <ChevronDown size={16} className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </div>
-
-      {isOpen && !disabled && (
-        <div className="absolute z-[100] w-full mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-xl max-h-60 overflow-hidden flex flex-col">
-          <div className="p-2 border-b border-slate-700 sticky top-0 bg-slate-800">
-            <div className="flex items-center bg-slate-900 rounded px-2 border border-slate-600">
-              <Search size={14} className="text-slate-400 mr-2" />
-              <input 
-                type="text" 
-                className="w-full bg-transparent border-none text-white text-sm py-1 focus:ring-0 placeholder-slate-500"
-                placeholder="Search error code..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                autoFocus
-                onClick={(e) => e.stopPropagation()} 
-              />
-              {searchTerm && (
-                 <button onClick={(e) => { e.stopPropagation(); setSearchTerm(''); }} className="text-slate-400 hover:text-white">
-                    <X size={14} />
-                 </button>
-              )}
-            </div>
-          </div>
-          <div className="overflow-y-auto flex-1">
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((opt) => (
-                <div 
-                  key={opt.code}
-                  className={`px-3 py-2 text-sm cursor-pointer hover:bg-slate-700 text-slate-200 border-b border-slate-700/50 last:border-0 ${value === opt.code ? 'bg-blue-600/20 text-blue-300' : ''}`}
-                  onClick={() => {
-                    onChange(opt.code);
-                    setIsOpen(false);
-                    setSearchTerm('');
-                  }}
-                >
-                  <span className="font-bold text-xs bg-slate-900 px-1.5 py-0.5 rounded mr-2 text-slate-400">{opt.code}</span>
-                  {opt.label.replace(`${opt.code}: `, '')}
-                </div>
-              ))
-            ) : (
-              <div className="px-3 py-4 text-center text-sm text-slate-500">No results found</div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+// Components
+import Header from './dashboard/Header';
+import Filters from './dashboard/Filters';
+import StatsCards from './dashboard/StatsCards';
+import ChartsSection from './dashboard/ChartsSection';
 
 const ErrorDashboard = () => {
   const [rawData, setRawData] = useState([]);
   const [machineMapping, setMachineMapping] = useState(DEFAULT_MAPPING);
   const [fileName, setFileName] = useState('');
   const [mappingFileName, setMappingFileName] = useState('');
-  const [targetError, setTargetError] = useState('42');
+  const [targetError, setTargetError] = useState('All');
   const [topMachineCount, setTopMachineCount] = useState(10); 
   const [selectedSerial, setSelectedSerial] = useState(null);
   const [selectedDate, setSelectedDate] = useState('All'); 
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const dashboardRef = useRef(null);
-
-  const getFormattedDate = () => {
-    const d = new Date();
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
+  
   const handleDownloadPDF = async () => {
     if (!dashboardRef.current) {
         alert("Dashboard content not found.");
@@ -167,18 +73,6 @@ const ErrorDashboard = () => {
     } finally {
       setIsGeneratingPdf(false);
     }
-  };
-
-  const parseCSVLine = (line) => {
-    const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
-    const values = line.split(regex);
-    return values.map(val => {
-      let v = val.trim();
-      if (v.startsWith('"') && v.endsWith('"')) {
-        v = v.slice(1, -1);
-      }
-      return v;
-    });
   };
 
   const handleFileUpload = (event) => {
@@ -280,13 +174,16 @@ const ErrorDashboard = () => {
       }
     });
 
-    return Array.from(errorMap.entries())
+    const options = Array.from(errorMap.entries())
       .map(([code, label]) => ({ code, label: `${code}: ${label}` }))
       .sort((a, b) => {
         const numA = parseInt(a.code, 10);
         const numB = parseInt(b.code, 10);
         return isNaN(numA) || isNaN(numB) ? a.code.localeCompare(b.code) : numA - numB;
       });
+      
+    options.unshift({ code: 'All', label: 'All Error Codes' });
+    return options;
   }, [rawData]);
 
   const getMachineName = (serial) => {
@@ -297,7 +194,7 @@ const ErrorDashboard = () => {
     if (!rawData.length) return { serialCounts: [], dailyCounts: [], totalErrors: 0, topMachine: null, pieData: [] };
 
     const filtered = rawData.filter(item => {
-      const isTargetError = (item['Error Number'] || '') === targetError;
+      const isTargetError = targetError === 'All' || (item['Error Number'] || '') === targetError;
       const isTargetDate = selectedDate === 'All' || item.dateStr === selectedDate;
       return isTargetError && isTargetDate;
     });
@@ -318,7 +215,6 @@ const ErrorDashboard = () => {
 
     const dateMap = {};
     filtered.forEach(item => {
-      // FIX: Ensure we only count valid YYYY-MM-DD dates as "Active Days"
       if (item.dateStr && item.dateStr !== 'Unknown' && item.dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
         dateMap[item.dateStr] = (dateMap[item.dateStr] || 0) + 1;
       }
@@ -387,328 +283,111 @@ const ErrorDashboard = () => {
   };
 
   // Helper to find label for selected error
-  const selectedErrorLabel = uniqueErrorOptions.find(o => o.code === targetError)?.label || targetError;
+  const selectedErrorLabel = targetError === 'All' ? 'All Error Codes' : (uniqueErrorOptions.find(o => o.code === targetError)?.label || targetError);
 
   return (
-    <div className="min-h-screen bg-slate-900 p-6 font-sans text-slate-100">
-      <div className="w-full mx-auto space-y-6">
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 3, overflowX: 'hidden' }}>
+      <Box sx={{ width: '100%', px: { xs: 1, md: 2 }, display: 'flex', flexDirection: 'column', gap: 3 }}>
         
         {/* Header (Web Only) */}
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <Activity className="text-blue-400" />
-              Machine Error Analysis Dashboard
-            </h1>
-            <p className="text-slate-400 text-sm mt-1">Upload Error Log & Machine Mapping to visualize</p>
-          </div>
-          
-          <div className="flex flex-wrap gap-4 items-center">
-             {isDataLoaded && (
-                <button
-                    onClick={handleDownloadPDF}
-                    disabled={isGeneratingPdf}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600"
-                >
-                    {isGeneratingPdf ? <Loader2 className="animate-spin" size={18} /> : <Download size={18} />}
-                    <span>{isGeneratingPdf ? 'Generating...' : 'PDF'}</span>
-                </button>
-             )}
-             <div className="relative">
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="csv-upload"
+        <Grid container spacing={3}>
+            <Grid item size={{ xs: 12 }} sx={{ width: '100%' }}>
+                <Header 
+                  isDataLoaded={isDataLoaded}
+                  handleDownloadPDF={handleDownloadPDF}
+                  isGeneratingPdf={isGeneratingPdf}
+                  handleFileUpload={handleFileUpload}
+                  handleMappingUpload={handleMappingUpload}
+                  getFormattedDate={getFormattedDate}
                 />
-                <label 
-                  htmlFor="csv-upload"
-                  className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-lg shadow-blue-900/50 font-medium whitespace-nowrap"
-                >
-                  <Upload size={18} />
-                  <span>Upload CSV</span>
-                </label>
-             </div>
-             <div className="relative">
-                <input
-                  type="file"
-                  accept=".csv,.txt"
-                  onChange={handleMappingUpload}
-                  className="hidden"
-                  id="mapping-upload"
-                />
-                <label 
-                  htmlFor="mapping-upload"
-                  className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors shadow-lg shadow-emerald-900/50 font-medium whitespace-nowrap"
-                >
-                  <FileSpreadsheet size={18} />
-                  <span>Import Machine Names</span>
-                </label>
-             </div>
-          </div>
-        </div>
+            </Grid>
+        </Grid>
 
         {/* Filters (Web Only) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700 flex items-center gap-3 relative z-20">
-                 <div className="p-2 bg-slate-700 rounded-lg"><AlertTriangle size={20} className="text-slate-300"/></div>
-                 <div className="flex-1 w-full">
-                     <label className="text-xs font-semibold text-slate-400 uppercase mb-1 block">Select Error Code</label>
-                     <SearchableDropdown 
-                        options={uniqueErrorOptions}
-                        value={targetError}
-                        onChange={setTargetError}
-                        disabled={!isDataLoaded}
-                        placeholder={!isDataLoaded ? "Waiting for CSV..." : "Search Error Code..."}
-                     />
-                 </div>
-            </div>
-
-            <div className="bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700 flex items-center gap-3 relative z-10">
-                 <div className="p-2 bg-slate-700 rounded-lg"><Calendar size={20} className="text-slate-300"/></div>
-                 <div className="flex-1">
-                     <label className="text-xs font-semibold text-slate-400 uppercase mb-1 block">Select Date</label>
-                     <div className="relative">
-                       <select 
-                          value={selectedDate} 
-                          onChange={(e) => setSelectedDate(e.target.value)}
-                          disabled={!isDataLoaded}
-                          className="w-full appearance-none bg-transparent font-bold text-lg border-none focus:ring-0 p-0 text-white pr-8 cursor-pointer disabled:text-slate-500"
-                       >
-                          <option value="All" className="text-slate-900 bg-slate-200">All Dates</option>
-                          {uniqueDateOptions.map((date) => (
-                              <option key={date} value={date} className="text-slate-900 bg-slate-200">
-                                {date}
-                              </option>
-                          ))}
-                       </select>
-                       <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={16} />
-                     </div>
-                 </div>
-            </div>
-            
-             
-        </div>
+        <Filters 
+          targetError={targetError}
+          setTargetError={setTargetError}
+          isDataLoaded={isDataLoaded}
+          uniqueErrorOptions={uniqueErrorOptions}
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          uniqueDateOptions={uniqueDateOptions}
+        />
 
         {/* MAIN DASHBOARD CONTENT (INCLUDED IN PDF) */}
-        <div ref={dashboardRef} className="bg-slate-900 p-2 rounded-xl"> 
-          {!isDataLoaded ? (
-            <div className="flex flex-col items-center justify-center py-20 bg-slate-800 rounded-xl border-2 border-dashed border-slate-700">
-              <div className="bg-slate-700 p-4 rounded-full mb-4">
-                <FileText size={48} className="text-blue-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-slate-300">Upload CSV to start analysis</h3>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              
-              {/* PDF Header: Explicitly show selected filters here for PDF capture */}
-              <div className="mb-6 p-4 bg-slate-800 border-b border-slate-700 rounded-lg">
-                 <div className="flex justify-between items-center mb-2">
-                    <h1 className="text-3xl font-bold text-white">Error Analysis Report</h1>
-                    <span className="text-slate-400 text-sm">{getFormattedDate()}</span>
-                 </div>
-                 <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="bg-slate-900/50 p-2 rounded border border-slate-700">
-                        <span className="text-slate-400 block text-xs uppercase font-bold">Target Error:</span>
-                        <span className="text-emerald-400 font-mono text-base font-bold">{selectedErrorLabel}</span>
-                    </div>
-                    <div className="bg-slate-900/50 p-2 rounded border border-slate-700">
-                        <span className="text-slate-400 block text-xs uppercase font-bold">Filter Date:</span>
-                        <span className="text-blue-400 font-mono text-base font-bold">{selectedDate}</span>
-                    </div>
-                 </div>
-              </div>
-
-              {/* KPI Cards */}
-              <div className="grid grid-cols-3 gap-6">
-                <div className="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 border-l-4 border-l-red-500">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-slate-400">Total Occurrences</p>
-                      <h2 className="text-4xl font-bold text-white mt-2">{processedData.totalErrors}</h2>
-                      <p className="text-xs text-red-400 mt-1 font-medium">Error Code {targetError}</p>
-                    </div>
-                    <div className="p-2 bg-slate-700/50 rounded-lg">
-                      <AlertTriangle className="text-red-500" size={24} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 border-l-4 border-l-amber-500">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-slate-400">Top Impacted Machine</p>
-                      <h2 className="text-3xl font-bold text-white mt-2">
-                        {processedData.topMachine ? processedData.topMachine.name : '-'}
-                      </h2>
-                      <p className="text-xs text-amber-500 mt-1 font-medium">
-                        {processedData.topMachine ? `${processedData.topMachine.count} incidents` : 'No Data'}
-                      </p>
-                    </div>
-                    <div className="p-2 bg-slate-700/50 rounded-lg">
-                      <Activity className="text-amber-500" size={24} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 border-l-4 border-l-blue-500">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-slate-400">Active Days (In Scope)</p>
-                      <h2 className="text-xl font-bold text-white mt-2 truncate">
-                         {processedData.dailyCounts.length} Day{processedData.dailyCounts.length !== 1 && 's'}
-                      </h2>
-                    </div>
-                    <div className="p-2 bg-slate-700/50 rounded-lg">
-                      <Calendar className="text-blue-500" size={24} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Charts Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {/* Bar Chart */}
-                <div className="lg:col-span-2 bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                            <span className="w-1 h-6 bg-blue-500 rounded-full"></span>
-                            Top Machines by Error Count
-                        </h3>
-                        <p className="text-xs text-slate-400 mt-1 ml-3">
-                            Click a bar to see its proportion in the Pie Chart
-                        </p>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 bg-slate-700 px-3 py-1 rounded-lg border border-slate-600">
-                        <ListFilter size={16} className="text-slate-400"/>
-                        <span className="text-xs text-slate-400 font-medium uppercase mr-1">Show:</span>
-                        <select 
-                            value={topMachineCount}
-                            onChange={(e) => setTopMachineCount(Number(e.target.value))}
-                            className="bg-transparent text-sm text-white font-bold border-none focus:ring-0 p-0 cursor-pointer"
-                        >
-                            <option value={5} className="text-slate-900">Top 5</option>
-                            <option value={10} className="text-slate-900">Top 10</option>
-                            <option value={15} className="text-slate-900">Top 15</option>
-                            <option value={20} className="text-slate-900">Top 20</option>
-                            <option value={50} className="text-slate-900">Top 50</option>
-                            <option value={1000} className="text-slate-900">All</option>
-                        </select>
-                    </div>
-                  </div>
-
-                  <div className="h-80"> 
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart 
-                        data={processedData.serialCounts.slice(0, topMachineCount)} 
-                        layout="vertical" 
-                        margin={{ left: 20, right: 30, bottom: 20 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#334155" />
-                        <XAxis type="number" stroke="#94a3b8" fontSize={12}>
-                          <Label value="Count" offset={-10} position="insideBottom" fill="#94a3b8" />
-                        </XAxis>
-                        <YAxis dataKey="name" type="category" width={100} stroke="#94a3b8" fontSize={12} fontWeight={500}>
-                            <Label value="Machine" angle={-90} position="insideLeft" style={{ textAnchor: 'middle' }} fill="#94a3b8" />
-                        </YAxis>
-                        <RechartsTooltip 
-                          contentStyle={{ backgroundColor: '#1e293b', borderRadius: '8px', border: '1px solid #334155', color: '#fff' }}
-                          itemStyle={{ color: '#fff' }}
-                          cursor={{fill: '#334155', opacity: 0.4}}
-                        />
-                        <Bar 
-                            dataKey="count" 
-                            radius={[0, 4, 4, 0]} 
-                            barSize={24} 
-                            isAnimationActive={true}
-                            onClick={handleBarClick}
-                            cursor="pointer"
-                        >
-                           {processedData.serialCounts.slice(0, topMachineCount).map((entry, index) => (
-                             <Cell 
-                               key={`cell-${index}`} 
-                               fill={entry.serial === selectedSerial ? '#ec4899' : '#3b82f6'} 
-                               stroke={entry.serial === selectedSerial ? '#fff' : 'none'}
-                               strokeWidth={2}
-                               cursor="pointer"
-                             />
-                           ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* Pie Chart */}
-                <div className="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 flex flex-col">
-                  <div className="flex justify-between items-start">
-                    <div>
-                        <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                            <span className={`w-1 h-6 rounded-full transition-colors ${selectedSerial ? 'bg-pink-500' : 'bg-amber-500'}`}></span>
-                            Error Proportion
-                        </h3>
-                        <p className="text-xs text-slate-400 mb-4 h-8 max-w-[200px] truncate">
-                            {selectedSerial 
-                             ? `${getMachineName(selectedSerial)} vs Others` 
-                             : `Comparing Code ${targetError} vs All Other Errors`}
-                        </p>
-                    </div>
-                    {selectedSerial && (
-                        <button 
-                            onClick={() => setSelectedSerial(null)}
-                            className="p-1.5 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 transition-colors"
-                            title="Reset Selection"
-                        >
-                            <RotateCcw size={16} />
-                        </button>
-                    )}
-                  </div>
+        <div ref={dashboardRef}> 
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {!isDataLoaded ? (
+                <Paper 
+                    variant="outlined" 
+                    sx={{ py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'background.paper', borderRadius: 3, borderStyle: 'dashed' }}
+                >
+                  <Box sx={{ bgcolor: 'rgba(51, 65, 85, 0.5)', p: 2, borderRadius: '50%', mb: 2 }}>
+                    <FileText size={48} className="text-blue-400" />
+                  </Box>
+                  <Typography variant="h6" color="text.secondary">Upload CSV to start analysis</Typography>
+                </Paper>
+              ) : (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                   
-                  <div className="flex-1 min-h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={processedData.pieData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={90}
-                          paddingAngle={5}
-                          dataKey="value"
-                          stroke="none"
-                          label={({ percent, value }) => percent > 0 ? `${(percent * 100).toFixed(1)}%` : null}
-                          labelLine={true}
-                        >
-                          {processedData.pieData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={processedData.pieColors[index % processedData.pieColors.length]} />
-                          ))}
-                        </Pie>
-                        <RechartsTooltip 
-                           contentStyle={{ backgroundColor: '#1e293b', borderRadius: '8px', border: '1px solid #334155', color: '#fff' }}
-                           itemStyle={{ color: '#fff' }}
-                        />
-                        <Legend 
-                           verticalAlign="bottom" 
-                           height={72} 
-                           wrapperStyle={{ color: '#cbd5e1', fontSize: '11px' }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-              </div>
-
-            </div>
-          )}
+                  {/* PDF Header: Using MUI Box and Typography */}
+                  <Grid container spacing={3}>
+                      <Grid item size={{ xs: 12 }} sx={{ width: '100%' }}>
+                          <Paper variant="outlined" sx={{ p: 3, bgcolor: 'background.paper', borderRadius: 2 }}>
+                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                <Typography variant="h4" fontWeight="bold" color="text.primary">Error Analysis Report</Typography>
+                                <Typography variant="body2" color="text.secondary">{getFormattedDate()}</Typography>
+                             </Box>
+                             <Grid container spacing={2}>
+                                <Grid item xs={6}>
+                                    <Box sx={{ bgcolor: 'rgba(15, 23, 42, 0.5)', p: 1.5, borderRadius: 1, border: 1, borderColor: 'divider' }}>
+                                        <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', display: 'block' }}>
+                                            Target Error:
+                                        </Typography>
+                                        <Typography variant="body1" fontWeight="bold" sx={{ fontFamily: 'monospace', color: 'secondary.main' }}>
+                                            {selectedErrorLabel}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Box sx={{ bgcolor: 'rgba(15, 23, 42, 0.5)', p: 1.5, borderRadius: 1, border: 1, borderColor: 'divider' }}>
+                                        <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', display: 'block' }}>
+                                            Filter Date:
+                                        </Typography>
+                                        <Typography variant="body1" fontWeight="bold" sx={{ fontFamily: 'monospace', color: 'primary.main' }}>
+                                            {selectedDate}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                             </Grid>
+                          </Paper>
+                      </Grid>
+                  </Grid>
+    
+                  {/* KPI Cards */}
+                  <StatsCards 
+                    processedData={processedData} 
+                    targetError={targetError} 
+                  />
+    
+                  {/* Charts Row */}
+                  <ChartsSection 
+                    processedData={processedData}
+                    topMachineCount={topMachineCount}
+                    setTopMachineCount={setTopMachineCount}
+                    handleBarClick={handleBarClick}
+                    selectedSerial={selectedSerial}
+                    setSelectedSerial={setSelectedSerial}
+                    targetError={targetError}
+                    getMachineName={getMachineName}
+                  />
+    
+                </Box>
+              )}
+            </Box>
         </div>
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 };
 

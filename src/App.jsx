@@ -1,9 +1,14 @@
-import ErrorDashboard from './components/ErrorDashboard'
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import theme from './theme';
+import ErrorDashboard from './components/ErrorDashboard';
 
 function App() {
   return (
-    <ErrorDashboard />
-  )
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <ErrorDashboard />
+    </ThemeProvider>
+  );
 }
 
-export default App
+export default App;
