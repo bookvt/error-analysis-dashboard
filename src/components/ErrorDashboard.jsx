@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { FileText } from 'lucide-react';
-import { Box, Container, Typography, Paper, Grid } from '@mui/material';
+import { Box, Container, Typography, Paper, Grid, Stack } from '@mui/material';
 
 // Constants & Utils
 import { DEFAULT_MAPPING } from '../constants/mappings';
@@ -41,7 +41,7 @@ const ErrorDashboard = () => {
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: '#0f172a'
+        backgroundColor: '#0f172a' // Updated to Slate 900
       });
 
       const imgData = canvas.toDataURL('image/png');
@@ -154,6 +154,8 @@ const ErrorDashboard = () => {
   useEffect(() => {
     setSelectedSerial(null);
   }, [targetError, selectedDate]);
+
+
 
   const uniqueDateOptions = useMemo(() => {
     const dates = new Set();
@@ -311,8 +313,8 @@ const ErrorDashboard = () => {
     : (uniqueErrorOptions.find(o => String(o.code).trim() === String(targetError).trim())?.label || targetError);
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 3, overflowX: 'hidden' }}>
-      <Box sx={{ width: '100%', px: { xs: 1, md: 2 }, display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, overflowX: 'hidden' }}>
+      <Box sx={{ width: '100%', px: { xs: 2, md: 4 }, display: 'flex', flexDirection: 'column', gap: 4 }}>
         
         {/* Header (Web Only) */}
         <Grid container spacing={3}>
@@ -341,45 +343,70 @@ const ErrorDashboard = () => {
 
         {/* MAIN DASHBOARD CONTENT (INCLUDED IN PDF) */}
         <div ref={dashboardRef}> 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {!isDataLoaded ? (
                 <Paper 
                     variant="outlined" 
-                    sx={{ py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'background.paper', borderRadius: 3, borderStyle: 'dashed' }}
+                    sx={{ 
+                        py: 12, 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center', 
+                        bgcolor: 'rgba(30, 41, 59, 0.2)', 
+                        borderRadius: 3, 
+                        borderStyle: 'dashed', 
+                        borderColor: 'rgba(255, 255, 255, 0.1)' 
+                    }}
                 >
-                  <Box sx={{ bgcolor: 'rgba(51, 65, 85, 0.5)', p: 2, borderRadius: '50%', mb: 2 }}>
-                    <FileText size={48} className="text-blue-400" />
+                  <Box sx={{ bgcolor: 'rgba(59, 130, 246, 0.1)', p: 3, borderRadius: '50%', mb: 2 }}>
+                    <FileText size={48} className="text-blue-500" />
                   </Box>
-                  <Typography variant="h6" color="text.secondary">Upload CSV to start analysis</Typography>
+                  <Typography variant="h6" color="text.secondary" fontWeight="medium">Upload CSV to start analysis</Typography>
                 </Paper>
               ) : (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   
-                  {/* PDF Header: Using MUI Box and Typography */}
+                  {/* Report Header Grid */}
                   <Grid container spacing={3}>
                       <Grid item size={{ xs: 12 }} sx={{ width: '100%' }}>
-                          <Paper variant="outlined" sx={{ p: 3, bgcolor: 'background.paper', borderRadius: 2 }}>
-                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                <Typography variant="h4" fontWeight="bold" color="text.primary">Error Analysis Report</Typography>
-                                <Typography variant="body2" color="text.secondary">{getFormattedDate()}</Typography>
-                             </Box>
-                             <Grid container spacing={2}>
+                          <Paper 
+                            elevation={0}
+                            sx={{ 
+                                p: 4, 
+                                bgcolor: 'rgba(30, 41, 59, 0.4)', // slate-800/40
+                                backdropFilter: 'blur(12px)',
+                                borderRadius: 3,
+                                border: '1px solid',
+                                borderColor: 'rgba(255, 255, 255, 0.1)'
+                            }}
+                          >
+                             <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2} mb={3}>
+                                <div>
+                                    <Typography variant="h4" fontWeight="800" sx={{ letterSpacing: '-0.5px' }} color="white">Error Analysis Report</Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Generated on {getFormattedDate()}</Typography>
+                                </div>
+                                <Box sx={{ px: 2, py: 0.5, bgcolor: 'rgba(16, 185, 129, 0.1)', borderRadius: 2, border: '1px solid', borderColor: 'rgba(16, 185, 129, 0.2)' }}>
+                                    <Typography variant="caption" fontWeight="bold" sx={{ color: '#34d399' }}>LIVE DATA</Typography>
+                                </Box>
+                             </Stack>
+                             
+                             <Grid container spacing={3}>
                                 <Grid item size={{ xs: 12, md: 6 }} sx={{ width: '100%' }}>
-                                    <Box sx={{ bgcolor: 'rgba(15, 23, 42, 0.5)', p: 1.5, borderRadius: 1, border: 1, borderColor: 'divider', width: '100%' }}>
-                                        <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', display: 'block' }}>
-                                            Target Error:
+                                    <Box sx={{ bgcolor: 'rgba(15, 23, 42, 0.5)', p: 2, borderRadius: 2, border: '1px solid', borderColor: 'rgba(255, 255, 255, 0.05)', width: '100%' }}>
+                                        <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', display: 'block', mb: 0.5, letterSpacing: '0.5px' }}>
+                                            Target Error
                                         </Typography>
-                                        <Typography variant="body1" fontWeight="bold" sx={{ fontFamily: 'monospace', color: 'secondary.main', wordBreak: 'break-all' }}>
+                                        <Typography variant="h6" fontWeight="bold" sx={{ fontFamily: 'monospace', color: 'secondary.main', wordBreak: 'break-all', lineHeight: 1.2 }}>
                                             {selectedErrorLabel}
                                         </Typography>
                                     </Box>
                                 </Grid>
                                 <Grid item size={{ xs: 12, md: 6 }} sx={{ width: '100%' }}>
-                                    <Box sx={{ bgcolor: 'rgba(15, 23, 42, 0.5)', p: 1.5, borderRadius: 1, border: 1, borderColor: 'divider', width: '100%' }}>
-                                        <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', display: 'block' }}>
-                                            Filter Date:
+                                    <Box sx={{ bgcolor: 'rgba(15, 23, 42, 0.5)', p: 2, borderRadius: 2, border: '1px solid', borderColor: 'rgba(255, 255, 255, 0.05)', width: '100%' }}>
+                                        <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', display: 'block', mb: 0.5, letterSpacing: '0.5px' }}>
+                                            Filter Date
                                         </Typography>
-                                        <Typography variant="body1" fontWeight="bold" sx={{ fontFamily: 'monospace', color: 'primary.main' }}>
+                                        <Typography variant="h6" fontWeight="bold" sx={{ fontFamily: 'monospace', color: 'primary.main', lineHeight: 1.2 }}>
                                             {selectedDate}
                                         </Typography>
                                     </Box>

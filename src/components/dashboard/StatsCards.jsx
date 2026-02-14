@@ -8,25 +8,28 @@ const StatsCards = ({ processedData, targetError }) => {
       title: "Total Occurrences",
       value: processedData.totalErrors,
       subtext: `Error Code ${targetError}`,
-      icon: <AlertTriangle size={24} className="text-red-500" />,
-      color: 'error.main', // red-500
-      borderColor: '#ef4444' // red-500
+      icon: <AlertTriangle size={24} className="text-red-400" />,
+      color: 'rgba(239, 68, 68, 0.1)', // red-500/10
+      borderColor: 'rgba(239, 68, 68, 0.5)', // red-500/50
+      glowColor: 'rgba(239, 68, 68, 0.2)'
     },
     {
       title: "Top Impacted Machine",
       value: processedData.topMachine ? processedData.topMachine.name : '-',
       subtext: processedData.topMachine ? `${processedData.topMachine.count} incidents` : 'No Data',
-      icon: <Activity size={24} className="text-amber-500" />,
-      color: 'warning.main', // amber-500
-      borderColor: '#f59e0b' // amber-500
+      icon: <Activity size={24} className="text-amber-400" />,
+      color: 'rgba(245, 158, 11, 0.1)', // amber-500/10
+      borderColor: 'rgba(245, 158, 11, 0.5)', // amber-500/50
+      glowColor: 'rgba(245, 158, 11, 0.2)'
     },
     {
       title: "Active Days (In Scope)",
       value: `${processedData.dailyCounts.length} Day${processedData.dailyCounts.length !== 1 ? 's' : ''}`,
       subtext: null,
-      icon: <Calendar size={24} className="text-blue-500" />,
-      color: 'info.main', // blue-500
-      borderColor: '#3b82f6' // blue-500
+      icon: <Calendar size={24} className="text-blue-400" />,
+      color: 'rgba(59, 130, 246, 0.1)', // blue-500/10
+      borderColor: 'rgba(59, 130, 246, 0.5)', // blue-500/50
+      glowColor: 'rgba(59, 130, 246, 0.2)'
     }
   ];
 
@@ -37,28 +40,44 @@ const StatsCards = ({ processedData, targetError }) => {
           <Card 
             sx={{ 
                 height: '100%',
-                borderLeft: 4, 
-                borderLeftColor: card.borderColor,
-                position: 'relative',
-                overflow: 'visible'
+                bgcolor: 'rgba(30, 41, 59, 0.4)', // slate-800/40
+                backdropFilter: 'blur(12px)',
+                border: '1px solid',
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 3,
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: `0 12px 24px -10px ${card.glowColor}`,
+                    borderColor: card.borderColor
+                }
             }}
           >
-            <CardContent>
+            <CardContent sx={{ p: 3 }}>
               <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                 <Box>
-                  <Typography variant="body2" color="text.secondary" fontWeight="medium">
+                  <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', fontSize: '0.75rem' }}>
                     {card.title}
                   </Typography>
-                  <Typography variant="h4" fontWeight="bold" sx={{ mt: 1, color: 'text.primary' }}>
+                  <Typography variant="h3" fontWeight="bold" sx={{ mt: 1, mb: 0.5, color: 'white' }}>
                     {card.value}
                   </Typography>
                   {card.subtext && (
-                    <Typography variant="caption" sx={{ mt: 0.5, display: 'block', color: card.borderColor, fontWeight: 'medium' }}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 'medium' }}>
                       {card.subtext}
                     </Typography>
                   )}
                 </Box>
-                <Box sx={{ p: 1, bgcolor: 'rgba(51, 65, 85, 0.5)', borderRadius: 2 }}>
+                <Box 
+                    sx={{ 
+                        p: 1.5, 
+                        borderRadius: 2,
+                        bgcolor: card.color,
+                        boxShadow: `0 0 15px ${card.glowColor}`,
+                        border: '1px solid',
+                        borderColor: card.borderColor
+                    }}
+                >
                   {card.icon}
                 </Box>
               </Stack>

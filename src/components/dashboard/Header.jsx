@@ -15,24 +15,25 @@ const Header = ({
         elevation={0}
         sx={{ 
             p: 3, 
-            bgcolor: 'background.paper', 
+            bgcolor: 'rgba(30, 41, 59, 0.4)', // slate-800/40
+            backdropFilter: 'blur(12px)',
             borderRadius: 3, 
             display: 'flex', 
             flexDirection: { xs: 'column', xl: 'row' },
             alignItems: { xl: 'center' },
             justifyContent: 'space-between',
             gap: 2,
-            border: 1,
-            borderColor: 'divider'
+            border: '1px solid',
+            borderColor: 'rgba(255, 255, 255, 0.1)'
         }}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column'}}>
-        <Typography variant="h5" component="h1" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.primary' }}>
-          <Activity size={28} className="text-blue-500" />
+        <Typography variant="h4" component="h1" fontWeight="800" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, background: 'linear-gradient(to right, #60a5fa, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          <Activity size={32} className="text-blue-400" style={{ stroke: '#60a5fa' }} />
           Machine Error Analysis Dashboard
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Upload Error Log & Machine Mapping to visualize
+        <Typography variant="body1" sx={{ mt: 0.5, color: 'text.secondary', fontWeight: 'medium' }}>
+            Upload Error Log & Machine Mapping to visualize insights
         </Typography>
       </Box>
       
@@ -40,21 +41,47 @@ const Header = ({
          {isDataLoaded && (
             <Button
                 variant="contained"
-                color="inherit"
                 onClick={handleDownloadPDF}
                 disabled={isGeneratingPdf}
-                startIcon={isGeneratingPdf ? <Loader2 className="animate-spin" size={18} /> : <Download size={18} />}
-                sx={{ bgcolor: 'rgba(51, 65, 85, 0.5)', '&:hover': { bgcolor: 'rgba(51, 65, 85, 0.7)' } }}
+                startIcon={isGeneratingPdf ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />}
+                sx={{ 
+                    bgcolor: 'rgba(255, 255, 255, 0.05)', 
+                    color: 'white',
+                    border: '1px solid',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(4px)',
+                    textTransform: 'none',
+                    fontWeight: 'bold',
+                    py: 1,
+                    px: 3,
+                    borderRadius: 2,
+                    '&:hover': { 
+                        bgcolor: 'rgba(255, 255, 255, 0.1)',
+                        borderColor: 'rgba(255, 255, 255, 0.2)'
+                    } 
+                }}
             >
-                {isGeneratingPdf ? 'Generating...' : 'PDF'}
+                {isGeneratingPdf ? 'Generating PDF...' : 'Export PDF'}
             </Button>
          )}
          
          <Button
             component="label"
             variant="contained"
-            color="primary"
-            startIcon={<Upload size={18} />}
+            startIcon={<Upload size={20} />}
+            sx={{
+                background: 'linear-gradient(to right, #3b82f6, #06b6d4)',
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                textTransform: 'none',
+                fontWeight: 'bold',
+                py: 1,
+                px: 3,
+                borderRadius: 2,
+                '&:hover': {
+                    background: 'linear-gradient(to right, #2563eb, #0891b2)',
+                    boxShadow: '0 6px 16px rgba(59, 130, 246, 0.4)',
+                }
+            }}
          >
             Upload CSV
             <input
@@ -67,12 +94,23 @@ const Header = ({
 
          <Button
             component="label"
-            variant="contained"
-            color="success"
-            startIcon={<FileSpreadsheet size={18} />}
-            sx={{ bgcolor: '#059669', '&:hover': { bgcolor: '#047857' } }} // emerald-600 to emerald-700
+            variant="outlined"
+            startIcon={<FileSpreadsheet size={20} />}
+            sx={{
+                color: '#34d399',
+                borderColor: 'rgba(52, 211, 153, 0.3)',
+                textTransform: 'none',
+                fontWeight: 'bold',
+                py: 1,
+                px: 3,
+                borderRadius: 2,
+                '&:hover': {
+                    borderColor: '#34d399',
+                    bgcolor: 'rgba(52, 211, 153, 0.05)'
+                }
+            }}
          >
-            Import Machine Names
+            Mapping
             <input
               type="file"
               accept=".csv,.txt"
