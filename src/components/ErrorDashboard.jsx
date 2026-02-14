@@ -384,7 +384,7 @@ const ErrorDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-900 p-6 font-sans text-slate-100">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="w-full mx-auto space-y-6">
         
         {/* Header (Web Only) */}
         <div className="flex flex-col xl:flex-row xl:items-center justify-between bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 gap-4">
