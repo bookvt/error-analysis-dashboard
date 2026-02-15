@@ -452,7 +452,7 @@ const ChartsSection = ({
         </Card>
       </Grid>
 
-      {/* Machine × Date Heatmap */}
+      {/* Machine × Date Error Distribution (Stacked) */}
       <Grid item size={{ xs: 12 }} sx={{ width: '100%' }}>
         <Card 
             sx={{ 
@@ -472,42 +472,27 @@ const ChartsSection = ({
                     <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#f87171' }}>
                       <BarChart3 size={20} />
                     </Box>
-                    Machine × Date Heatmap
+                    Machine × Date Error Distribution
                 </Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ ml: 5.5, display: 'block', mb: 2 }}>
-                    Visualize error density across machines and dates
+                    Daily error counts broken down by machine (Stacked)
                 </Typography>
             </Box>
             <Box sx={{ flex: 1, minHeight: 400, overflowX: 'auto' }}>
                 <ResponsiveContainer width="100%" height="100%" minWidth={600}>
                     <BarChart 
-                        data={processedData.heatmapData.flatMap(machine => 
-                            machine.dataPoints.map(dp => ({
-                                ...dp,
-                                machineLabel: machine.machineName.length > 15 
-                                    ? machine.machineName.substring(0, 15) + '...' 
-                                    : machine.machineName
-                            }))
-                        )}
-                        margin={{ top: 10, right: 30, left: 100, bottom: 60 }}
-                        layout="horizontal"
+                        data={processedData.machineDailyData}
+                        margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
                     >
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
                         <XAxis 
-                            type="category"
                             dataKey="date" 
                             stroke="#94a3b8"
-                            tick={{ fill: '#cbd5e1', fontSize: 11 }}
-                            angle={-45}
-                            textAnchor="end"
-                            height={80}
+                            tick={{ fill: '#cbd5e1', fontSize: 12 }}
                         />
                         <YAxis 
-                            type="category"
-                            dataKey="machineLabel"
                             stroke="#94a3b8"
-                            tick={{ fill: '#cbd5e1', fontSize: 11 }}
-                            width={90}
+                            tick={{ fill: '#cbd5e1', fontSize: 12 }}
                         />
                         <RechartsTooltip 
                             cursor={{fill: 'rgba(255, 255, 255, 0.05)'}}
@@ -518,37 +503,25 @@ const ChartsSection = ({
                                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                                 padding: '12px'
                             }}
-                            labelStyle={{ color: '#fff', fontWeight: 'bold', marginBottom: '4px' }}
                             itemStyle={{ color: '#cbd5e1' }}
-                            content={({ active, payload }) => {
-                                if (active && payload && payload.length) {
-                                    const data = payload[0].payload;
-                                    return (
-                                        <div style={{ 
-                                            backgroundColor: 'rgba(15, 23, 42, 0.95)', 
-                                            padding: '12px', 
-                                            borderRadius: '8px',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)'
-                                        }}>
-                                            <p style={{ margin: 0, color: '#fff', fontWeight: 'bold' }}>{data.machine}</p>
-                                            <p style={{ margin: '4px 0 0 0', color: '#cbd5e1', fontSize: '0.875rem' }}>
-                                                Date: {data.date}
-                                            </p>
-                                            <p style={{ margin: '4px 0 0 0', color: '#f87171', fontSize: '0.875rem' }}>
-                                                Errors: {data.value}
-                                            </p>
-                                        </div>
-                                    );
-                                }
-                                return null;
-                            }}
                         />
-                        <Bar 
-                            dataKey="value" 
-                            fill="#ef4444"
-                            radius={[4, 4, 4, 4]}
-                            opacity={0.8}
-                        />
+                        <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                        {processedData.allMachineNames && processedData.allMachineNames.map((machine, index) => {
+                            // Professional color palette for machines
+                            const colors = [
+                                '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', 
+                                '#ec4899', '#6366f1', '#14b8a6', '#f97316', '#06b6d4'
+                            ];
+                            return (
+                                <Bar 
+                                    key={machine}
+                                    dataKey={machine}
+                                    stackId="a"
+                                    fill={colors[index % colors.length]}
+                                    maxBarSize={50}
+                                />
+                            );
+                        })}
                     </BarChart>
                 </ResponsiveContainer>
             </Box>

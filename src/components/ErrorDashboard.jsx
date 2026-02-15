@@ -99,15 +99,76 @@ const ErrorDashboard = () => {
             entry[header.trim()] = rawValue.trim();
         });
 
-        if (entry['Time']) {
-            const parts = entry['Time'].split(' ');
-            if (parts.length > 0) {
-                entry.dateStr = parts[0]; 
-            } else {
-                entry.dateStr = 'Unknown';
+        // Date & Time Parsing Logic
+        let dateStr = 'Unknown';
+        let timeStr = '';
+
+        if (entry['Timestamp']) {
+            // Handle "YYYY-MM-DD HH:mm:ss"
+            const parts = entry['Timestamp'].split(' ');
+            if (parts.length >= 2) {
+                dateStr = parts[0];
+                timeStr = parts[1];
+            } else if (parts.length === 1) {
+                dateStr = parts[0]; // Assume just date
             }
-        } else {
-            entry.dateStr = 'Unknown';
+        } else if (entry['Date']) {
+             // Handle explicit Date column
+             dateStr = entry['Date'];
+             if (entry['Time']) {
+                timeStr = entry['Time'];
+             }
+        } else if (entry['Time']) {
+            // Handle legacy format where Date might be in Time column or just Time
+            const parts = entry['Time'].split(' ');
+            if (parts.length > 1) {
+                dateStr = parts[0];
+                timeStr = parts[1];
+            } else {
+                // Try to recognize if it's a date or time
+                if (entry['Time'].includes(':')) {
+                    timeStr = entry['Time'];
+                } else {
+                    dateStr = entry['Time'];
+                }
+            }
+        }
+        
+        // Normalize date format if needed (simple check)
+        // If date is D/M/Y or D-M-Y, try to convert to YYYY-MM-DD for consistency
+        if (dateStr !== 'Unknown' && !dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            // Attempt simple conversion for DD/MM/YYYY or DD-MM-YYYY
+            const parts = dateStr.split(/[-/]/);
+            if (parts.length === 3) {
+                // assume DD-MM-YYYY or MM-DD-YYYY? 
+                // Let's assume DD-MM-YYYY based on typical non-ISO usage
+                // If year is last
+                if (parts[2].length === 4) {
+                    dateStr = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                }
+            }
+        }
+
+        entry.dateStr = dateStr;
+        
+        // Ensure entry['Time'] is populated for Hourly chart if it wasn't before
+        if (!entry['Time'] && timeStr) {
+            entry['Time'] = timeStr;
+        } else if (entry['Time'] && !timeStr) {
+             const parts = entry['Time'].split(' ');
+             if (parts.length > 1) timeStr = parts[1];
+             else timeStr = parts[0];
+        }
+
+        // Flexible Column Mapping for Serial/Machine
+        // Prioritize 'Serial Number', then 'Serial', 'Machine', 'Machine Name', 'Device ID'
+        if (!entry['Serial Number']) {
+            entry['Serial Number'] = entry['Serial'] || entry['Machine'] || entry['Machine Name'] || entry['Device ID'] || 'Unknown';
+        }
+
+        // Flexible Column Mapping for Error Code
+        if (!entry['Error Number']) {
+             entry['Error Number'] = entry['Error Code'] || entry['Error'] || entry['Code'] || 'Unknown';
         }
 
         return entry;
@@ -337,6 +398,20 @@ const ErrorDashboard = () => {
         return { serial, machineName, dataPoints };
     });
 
+    // 2.1 Pivoted Data for Stacked Bar Chart (Machine x Date)
+    // Structure: [{ date: '2024-01-01', 'Machine A': 5, 'Machine B': 2 }, ...]
+    const machineDailyData = sortedDates.map(date => {
+        const entry = { date };
+        sortedMachines.forEach(serial => {
+            const machineName = getMachineName(serial);
+            entry[machineName] = heatmapMatrix[`${serial}|${date}`] || 0;
+        });
+        return entry;
+    });
+    
+    // Get list of all machine names for the stacks
+    const allMachineNames = sortedMachines.map(serial => getMachineName(serial));
+
     // 3. Multi-Error Trend Data (Top 5 errors over time)
     const errorCodeMap = {};
     rawData.forEach(item => {
@@ -391,6 +466,8 @@ const ErrorDashboard = () => {
       lineChartData,
       hourlyDistribution,
       heatmapData,
+      machineDailyData,
+      allMachineNames,
       multiErrorTrendData,
       top5Errors
     };
