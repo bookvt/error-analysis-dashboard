@@ -39,17 +39,22 @@ function App() {
     }
 
     // In a real app, you'd hash the input and compare with a stored hash.
-    // For this simple static deployment, we'll assume the env vars store the PLAIN credentials
-    // effectively acting as the "stored secret" that shouldn't be revealed.
-    // However, to prevent timing attacks slightly and follow best practice, 
-    // we'll still compare them carefully, or even better, hash both to compare.
+    // We will hash the input password and compare it with the STORED HASH from env.
+    // This means VITE_APP_PASSWORD in GitHub Secrets must be the SHA-256 hash of the password.
     
-    // Let's rely on direct comparison for simplicity in this specific "no-backend" scope,
-    // as the env vars are injected at build time.
-    if (username === validUser && password === validPass) {
-      localStorage.setItem('dashboard_session', 'active');
-      setIsLoggedIn(true);
-      return true;
+    // For the username, we can keep it plain text or hash it too. Let's keep username plain for simplicity
+    // but hash the password to prevent F12 snooping.
+    
+    if (username === validUser) {
+        // Hash the input password
+        const inputHash = await hashString(password);
+        
+        // Compare with the stored hash
+        if (inputHash === validPass) {
+          localStorage.setItem('dashboard_session', 'active');
+          setIsLoggedIn(true);
+          return true;
+        }
     }
 
     return false;
