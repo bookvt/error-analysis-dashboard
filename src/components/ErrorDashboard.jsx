@@ -14,7 +14,7 @@ import Filters from './dashboard/Filters';
 import StatsCards from './dashboard/StatsCards';
 import ChartsSection from './dashboard/ChartsSection';
 
-const ErrorDashboard = () => {
+const ErrorDashboard = ({ onLogout }) => {
   const [rawData, setRawData] = useState([]);
   const [machineMapping, setMachineMapping] = useState(DEFAULT_MAPPING);
   const [fileName, setFileName] = useState('');
@@ -477,6 +477,7 @@ const ErrorDashboard = () => {
                   isGeneratingPdf={isGeneratingPdf}
                   handleFileUpload={handleFileUpload}
                   getFormattedDate={getFormattedDate}
+                  onLogout={onLogout}
                 />
             </Grid>
         </Grid>
