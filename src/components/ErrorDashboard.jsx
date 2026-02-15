@@ -281,6 +281,105 @@ const ErrorDashboard = () => {
         .map(date => ({ date, count: lineChartDateMap[date] }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
+    // NEW CHARTS DATA PROCESSING
+
+    // 1. Hourly Distribution (0-23 hours)
+    const hourlyMap = Array(24).fill(0);
+    filtered.forEach(item => {
+        if (item['Time']) {
+            const timePart = item['Time'].split(' ')[1]; // Get "HH:MM:SS" or "HH:MM"
+            if (timePart) {
+                const hour = parseInt(timePart.split(':')[0], 10);
+                if (!isNaN(hour) && hour >= 0 && hour < 24) {
+                    hourlyMap[hour]++;
+                }
+            }
+        }
+    });
+    const hourlyDistribution = hourlyMap.map((count, hour) => ({ 
+        hour: `${hour.toString().padStart(2, '0')}:00`, 
+        count 
+    }));
+
+    // 2. Heatmap Data (Machine × Date matrix)
+    const heatmapMatrix = {};
+    const allDates = new Set();
+    const allMachines = new Set();
+    
+    rawData.forEach(item => {
+        if (item.dateStr && item.dateStr !== 'Unknown' && item.dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            allDates.add(item.dateStr);
+        }
+        const serial = item['Serial Number'] || 'Unknown';
+        allMachines.add(serial);
+    });
+
+    const sortedDates = Array.from(allDates).sort();
+    const sortedMachines = Array.from(allMachines).sort();
+
+    filtered.forEach(item => {
+        const serial = item['Serial Number'] || 'Unknown';
+        const date = item.dateStr;
+        if (date && date !== 'Unknown' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const key = `${serial}|${date}`;
+            heatmapMatrix[key] = (heatmapMatrix[key] || 0) + 1;
+        }
+    });
+
+    const heatmapData = sortedMachines.map(serial => {
+        const machineName = getMachineName(serial);
+        const dataPoints = sortedDates.map(date => ({
+            date,
+            machine: machineName,
+            serial,
+            value: heatmapMatrix[`${serial}|${date}`] || 0
+        }));
+        return { serial, machineName, dataPoints };
+    });
+
+    // 3. Multi-Error Trend Data (Top 5 errors over time)
+    const errorCodeMap = {};
+    rawData.forEach(item => {
+        const errorCode = item['Error Number'];
+        if (errorCode) {
+            errorCodeMap[errorCode] = (errorCodeMap[errorCode] || 0) + 1;
+        }
+    });
+
+    const top5Errors = Object.entries(errorCodeMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([code]) => code);
+
+    const multiErrorTrendMap = {};
+    rawData.forEach(item => {
+        const errorCode = item['Error Number'];
+        const date = item.dateStr;
+        if (top5Errors.includes(errorCode) && date && date !== 'Unknown' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            if (!multiErrorTrendMap[date]) {
+                multiErrorTrendMap[date] = {};
+            }
+            multiErrorTrendMap[date][errorCode] = (multiErrorTrendMap[date][errorCode] || 0) + 1;
+        }
+    });
+
+    const allDatesForTrend = new Set();
+    rawData.forEach(item => {
+        if (item.dateStr && item.dateStr !== 'Unknown' && item.dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            allDatesForTrend.add(item.dateStr);
+        }
+    });
+
+    const multiErrorTrendData = Array.from(allDatesForTrend)
+        .sort()
+        .map(date => {
+            const dataPoint = { date };
+            top5Errors.forEach(errorCode => {
+                dataPoint[errorCode] = (multiErrorTrendMap[date] && multiErrorTrendMap[date][errorCode]) || 0;
+            });
+            return dataPoint;
+        });
+
     return { 
       filteredData: filtered, 
       serialCounts, 
@@ -289,7 +388,11 @@ const ErrorDashboard = () => {
       topMachine,
       pieData,
       pieColors,
-      lineChartData
+      lineChartData,
+      hourlyDistribution,
+      heatmapData,
+      multiErrorTrendData,
+      top5Errors
     };
   }, [rawData, targetError, selectedSerial, machineMapping, selectedDate]);
 

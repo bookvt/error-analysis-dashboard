@@ -301,6 +301,261 @@ const ChartsSection = ({
             </CardContent>
         </Card>
       </Grid>
+
+      {/* NEW CHARTS ROW */}
+
+      {/* Hour-of-Day Distribution */}
+      <Grid item size={{ xs: 12, md: 6 }} sx={{ width: '100%' }}>
+        <Card 
+            sx={{ 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column',
+                bgcolor: 'rgba(30, 41, 59, 0.4)',
+                backdropFilter: 'blur(12px)',
+                borderRadius: 3,
+                border: '1px solid',
+                borderColor: 'rgba(255, 255, 255, 0.1)'
+            }}
+        >
+          <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 3 }}>
+            <Box>
+                <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, color: 'white', mb: 1 }}>
+                    <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(168, 85, 247, 0.1)', color: '#c084fc' }}>
+                      <TrendingUp size={20} />
+                    </Box>
+                    Hour-of-Day Distribution
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ ml: 5.5, display: 'block', mb: 2 }}>
+                    When do errors occur throughout the day?
+                </Typography>
+            </Box>
+            <Box sx={{ flex: 1, minHeight: 300 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={processedData.hourlyDistribution} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+                        <XAxis 
+                            dataKey="hour" 
+                            stroke="#94a3b8"
+                            tick={{ fill: '#cbd5e1', fontSize: 12 }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
+                        />
+                        <YAxis 
+                            stroke="#94a3b8"
+                            tick={{ fill: '#cbd5e1', fontSize: 12 }}
+                        />
+                        <RechartsTooltip 
+                            cursor={{fill: 'rgba(255, 255, 255, 0.05)'}}
+                            contentStyle={{ 
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)', 
+                                borderRadius: '12px', 
+                                border: '1px solid rgba(255, 255, 255, 0.1)', 
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                padding: '12px'
+                            }}
+                            labelStyle={{ color: '#fff', fontWeight: 'bold', marginBottom: '4px' }}
+                            itemStyle={{ color: '#cbd5e1' }}
+                        />
+                        <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                            {processedData.hourlyDistribution.map((entry, index) => (
+                                <Cell 
+                                    key={`cell-${index}`} 
+                                    fill={entry.count === Math.max(...processedData.hourlyDistribution.map(d => d.count)) && entry.count > 0 ? '#f87171' : '#c084fc'} 
+                                />
+                            ))}
+                        </Bar>
+                    </BarChart>
+                </ResponsiveContainer>
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* Multi-Error Trend Comparison */}
+      <Grid item size={{ xs: 12, md: 6 }} sx={{ width: '100%' }}>
+        <Card 
+            sx={{ 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column',
+                bgcolor: 'rgba(30, 41, 59, 0.4)',
+                backdropFilter: 'blur(12px)',
+                borderRadius: 3,
+                border: '1px solid',
+                borderColor: 'rgba(255, 255, 255, 0.1)'
+            }}
+        >
+          <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 3 }}>
+            <Box>
+                <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, color: 'white', mb: 1 }}>
+                    <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa' }}>
+                      <TrendingUp size={20} />
+                    </Box>
+                    Top 5 Errors Comparison
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ ml: 5.5, display: 'block', mb: 2 }}>
+                    Compare trends of the most frequent errors
+                </Typography>
+            </Box>
+            <Box sx={{ flex: 1, minHeight: 300 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={processedData.multiErrorTrendData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+                        <XAxis 
+                            dataKey="date" 
+                            stroke="#94a3b8"
+                            tick={{ fill: '#cbd5e1', fontSize: 12 }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
+                        />
+                        <YAxis 
+                            stroke="#94a3b8"
+                            tick={{ fill: '#cbd5e1', fontSize: 12 }}
+                        />
+                        <RechartsTooltip 
+                            contentStyle={{ 
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)', 
+                                borderRadius: '12px', 
+                                border: '1px solid rgba(255, 255, 255, 0.1)', 
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                padding: '12px'
+                            }}
+                            labelStyle={{ color: '#fff', fontWeight: 'bold', marginBottom: '4px' }}
+                            itemStyle={{ color: '#cbd5e1' }}
+                        />
+                        <Legend 
+                            wrapperStyle={{ paddingTop: '10px' }}
+                            iconType="line"
+                        />
+                        {processedData.top5Errors && processedData.top5Errors.map((errorCode, index) => {
+                            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+                            return (
+                                <Line 
+                                    key={errorCode}
+                                    type="monotone" 
+                                    dataKey={errorCode} 
+                                    name={`Error ${errorCode}`}
+                                    stroke={colors[index % colors.length]}
+                                    strokeWidth={2}
+                                    dot={{ r: 3 }}
+                                    activeDot={{ r: 5 }}
+                                />
+                            );
+                        })}
+                    </LineChart>
+                </ResponsiveContainer>
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* Machine × Date Heatmap */}
+      <Grid item size={{ xs: 12 }} sx={{ width: '100%' }}>
+        <Card 
+            sx={{ 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column',
+                bgcolor: 'rgba(30, 41, 59, 0.4)',
+                backdropFilter: 'blur(12px)',
+                borderRadius: 3,
+                border: '1px solid',
+                borderColor: 'rgba(255, 255, 255, 0.1)'
+            }}
+        >
+          <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 3 }}>
+            <Box>
+                <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, color: 'white', mb: 1 }}>
+                    <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#f87171' }}>
+                      <BarChart3 size={20} />
+                    </Box>
+                    Machine × Date Heatmap
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ ml: 5.5, display: 'block', mb: 2 }}>
+                    Visualize error density across machines and dates
+                </Typography>
+            </Box>
+            <Box sx={{ flex: 1, minHeight: 400, overflowX: 'auto' }}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={600}>
+                    <BarChart 
+                        data={processedData.heatmapData.flatMap(machine => 
+                            machine.dataPoints.map(dp => ({
+                                ...dp,
+                                machineLabel: machine.machineName.length > 15 
+                                    ? machine.machineName.substring(0, 15) + '...' 
+                                    : machine.machineName
+                            }))
+                        )}
+                        margin={{ top: 10, right: 30, left: 100, bottom: 60 }}
+                        layout="horizontal"
+                    >
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+                        <XAxis 
+                            type="category"
+                            dataKey="date" 
+                            stroke="#94a3b8"
+                            tick={{ fill: '#cbd5e1', fontSize: 11 }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={80}
+                        />
+                        <YAxis 
+                            type="category"
+                            dataKey="machineLabel"
+                            stroke="#94a3b8"
+                            tick={{ fill: '#cbd5e1', fontSize: 11 }}
+                            width={90}
+                        />
+                        <RechartsTooltip 
+                            cursor={{fill: 'rgba(255, 255, 255, 0.05)'}}
+                            contentStyle={{ 
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)', 
+                                borderRadius: '12px', 
+                                border: '1px solid rgba(255, 255, 255, 0.1)', 
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                padding: '12px'
+                            }}
+                            labelStyle={{ color: '#fff', fontWeight: 'bold', marginBottom: '4px' }}
+                            itemStyle={{ color: '#cbd5e1' }}
+                            content={({ active, payload }) => {
+                                if (active && payload && payload.length) {
+                                    const data = payload[0].payload;
+                                    return (
+                                        <div style={{ 
+                                            backgroundColor: 'rgba(15, 23, 42, 0.95)', 
+                                            padding: '12px', 
+                                            borderRadius: '8px',
+                                            border: '1px solid rgba(255, 255, 255, 0.1)'
+                                        }}>
+                                            <p style={{ margin: 0, color: '#fff', fontWeight: 'bold' }}>{data.machine}</p>
+                                            <p style={{ margin: '4px 0 0 0', color: '#cbd5e1', fontSize: '0.875rem' }}>
+                                                Date: {data.date}
+                                            </p>
+                                            <p style={{ margin: '4px 0 0 0', color: '#f87171', fontSize: '0.875rem' }}>
+                                                Errors: {data.value}
+                                            </p>
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            }}
+                        />
+                        <Bar 
+                            dataKey="value" 
+                            fill="#ef4444"
+                            radius={[4, 4, 4, 4]}
+                            opacity={0.8}
+                        />
+                    </BarChart>
+                </ResponsiveContainer>
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
+
     </Grid>
   );
 };
