@@ -18,7 +18,6 @@ const ErrorDashboard = () => {
   const [rawData, setRawData] = useState([]);
   const [machineMapping, setMachineMapping] = useState(DEFAULT_MAPPING);
   const [fileName, setFileName] = useState('');
-  const [mappingFileName, setMappingFileName] = useState('');
   const [targetError, setTargetError] = useState('All');
   const [topMachineCount, setTopMachineCount] = useState(10); 
   const [selectedSerial, setSelectedSerial] = useState(null);
@@ -183,34 +182,7 @@ const ErrorDashboard = () => {
     reader.readAsText(file);
   };
 
-  const handleMappingUpload = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
 
-    setMappingFileName(file.name);
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      const text = e.target.result;
-      const rows = text.split('\n').map(row => row.trim()).filter(row => row);
-      
-      const newMapping = { ...DEFAULT_MAPPING };
-      
-      rows.forEach(row => {
-        const parts = row.split(',');
-        if (parts.length >= 2) {
-            const serial = parts[0].trim();
-            const name = parts[1].trim();
-            if (serial && name) {
-                newMapping[serial] = name;
-            }
-        }
-      });
-
-      setMachineMapping(newMapping);
-    };
-    reader.readAsText(file);
-  };
 
   useEffect(() => {
     setSelectedSerial(null);
@@ -504,7 +476,6 @@ const ErrorDashboard = () => {
                   handleDownloadPDF={handleDownloadPDF}
                   isGeneratingPdf={isGeneratingPdf}
                   handleFileUpload={handleFileUpload}
-                  handleMappingUpload={handleMappingUpload}
                   getFormattedDate={getFormattedDate}
                 />
             </Grid>
@@ -542,6 +513,19 @@ const ErrorDashboard = () => {
                     <FileText size={48} className="text-blue-500" />
                   </Box>
                   <Typography variant="h6" color="text.secondary" fontWeight="medium">Upload CSV to start analysis</Typography>
+                  <Box sx={{ 
+                    mt: 2, 
+                    bgcolor: 'rgba(251, 191, 36, 0.1)', 
+                    color: '#fbbf24', 
+                    px: 2, 
+                    py: 1, 
+                    borderRadius: 2, 
+                    border: '1px solid rgba(251, 191, 36, 0.2)',
+                    fontSize: '0.875rem',
+                    fontWeight: 'medium'
+                  }}>
+                    Note: No data is collected. All processing is done locally in your browser.
+                  </Box>
                 </Paper>
               ) : (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

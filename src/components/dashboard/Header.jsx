@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, Download, Loader2, Upload, FileSpreadsheet } from 'lucide-react';
+import { Activity, Download, Loader2, Upload, FileSpreadsheet, ShieldCheck } from 'lucide-react';
 import { Box, Button, Typography, Paper, Stack } from '@mui/material';
 
 const Header = ({ 
@@ -7,7 +7,6 @@ const Header = ({
   handleDownloadPDF, 
   isGeneratingPdf, 
   handleFileUpload, 
-  handleMappingUpload,
   getFormattedDate
 }) => {
   return (
@@ -33,7 +32,25 @@ const Header = ({
           Machine Error Analysis Dashboard
         </Typography>
         <Typography variant="body1" sx={{ mt: 0.5, color: 'text.secondary', fontWeight: 'medium' }}>
-            Upload Error Log & Machine Mapping to visualize insights
+            Upload Error Log & Machine Mapping to visualize insights 
+            <Box component="span" sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1, 
+                mt: 1.5, 
+                fontSize: '0.85em', 
+                color: '#fbbf24', 
+                fontWeight: 'bold',
+                bgcolor: 'rgba(251, 191, 36, 0.1)',
+                py: 0.5,
+                px: 1.5,
+                borderRadius: 2,
+                width: 'fit-content',
+                border: '1px solid rgba(251, 191, 36, 0.2)'
+            }}>
+               <ShieldCheck size={14} />
+               Note: No data is collected. All processing is done locally in your browser.
+            </Box>
         </Typography>
       </Box>
       
@@ -88,33 +105,6 @@ const Header = ({
               type="file"
               accept=".csv"
               onChange={handleFileUpload}
-              hidden
-            />
-         </Button>
-
-         <Button
-            component="label"
-            variant="outlined"
-            startIcon={<FileSpreadsheet size={20} />}
-            sx={{
-                color: '#34d399',
-                borderColor: 'rgba(52, 211, 153, 0.3)',
-                textTransform: 'none',
-                fontWeight: 'bold',
-                py: 1,
-                px: 3,
-                borderRadius: 2,
-                '&:hover': {
-                    borderColor: '#34d399',
-                    bgcolor: 'rgba(52, 211, 153, 0.05)'
-                }
-            }}
-         >
-            Mapping
-            <input
-              type="file"
-              accept=".csv,.txt"
-              onChange={handleMappingUpload}
               hidden
             />
          </Button>
