@@ -1,14 +1,21 @@
-import React from 'react';
-import { Activity, Download, Loader2, Upload, FileSpreadsheet, ShieldCheck, LogOut } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Activity, Download, Loader2, Upload, FileSpreadsheet, ShieldCheck } from 'lucide-react';
 import { Box, Button, Typography, Paper, Stack } from '@mui/material';
 
 const Header = ({ 
   isDataLoaded, 
   handleDownloadPDF, 
-  handleFileUpload, 
-  getFormattedDate,
-  onLogout
+  handleFileUpload,
+  isGeneratingPdf 
 }) => {
+  const fileInputRef = useRef(null);
+
+  const handleUploadClick = () => {
+    if (fileInputRef.current) {
+        fileInputRef.current.click();
+    }
+  };
+
   return (
     <Paper 
         elevation={0}
@@ -82,9 +89,16 @@ const Header = ({
             </Button>
          )}
          
+         <input
+            type="file"
+            accept=".csv"
+            onChange={handleFileUpload}
+            style={{ display: 'none' }}
+            ref={fileInputRef}
+         />
          <Button
-            component="label"
             variant="contained"
+            onClick={handleUploadClick}
             startIcon={<Upload size={20} />}
             sx={{
                 background: 'linear-gradient(to right, #3b82f6, #06b6d4)',
@@ -101,32 +115,6 @@ const Header = ({
             }}
          >
             Upload CSV
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleFileUpload}
-              hidden
-            />
-         </Button>
-         <Button
-            variant="outlined"
-            onClick={onLogout}
-            startIcon={<LogOut size={20} />}
-            sx={{
-                color: '#ef4444',
-                borderColor: 'rgba(239, 68, 68, 0.3)',
-                textTransform: 'none',
-                fontWeight: 'bold',
-                py: 1,
-                px: 3,
-                borderRadius: 2,
-                '&:hover': {
-                    borderColor: '#ef4444',
-                    bgcolor: 'rgba(239, 68, 68, 0.05)'
-                }
-            }}
-         >
-            Sign Out
          </Button>
       </Stack>
     </Paper>
