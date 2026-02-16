@@ -21,7 +21,7 @@ const MachineErrorAnalysis = () => {
   const [targetError, setTargetError] = useState('All');
   const [topMachineCount, setTopMachineCount] = useState(10); 
   const [selectedSerial, setSelectedSerial] = useState(null);
-  const [selectedDate, setSelectedDate] = useState('All'); 
+  const [selectedDate, setSelectedDate] = useState([]); // Empty array = 'All'
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false); // Renamed in logic, but state name kept for simplicity or can be generic
   const dashboardRef = useRef(null);
@@ -184,7 +184,6 @@ const MachineErrorAnalysis = () => {
       setRawData(parsedData);
       setIsDataLoaded(true);
       setSelectedSerial(null);
-      setSelectedDate('All'); 
     };
 
     reader.readAsText(file);
@@ -230,6 +229,13 @@ const MachineErrorAnalysis = () => {
     return options;
   }, [rawData]);
 
+  // Effect to default select all dates on new data load
+  useEffect(() => {
+    if (uniqueDateOptions.length > 0) {
+        setSelectedDate(uniqueDateOptions);
+    }
+  }, [uniqueDateOptions]);
+
   const getMachineName = (serial) => {
     return machineMapping[serial] || `Serial ${serial}`;
   };
@@ -239,7 +245,7 @@ const MachineErrorAnalysis = () => {
 
     const filtered = rawData.filter(item => {
       const isTargetError = targetError === 'All' || (item['Error Number'] || '') === targetError;
-      const isTargetDate = selectedDate === 'All' || item.dateStr === selectedDate;
+      const isTargetDate = selectedDate.length === 0 || selectedDate.includes(item.dateStr);
       return isTargetError && isTargetDate;
     });
 
@@ -271,7 +277,7 @@ const MachineErrorAnalysis = () => {
     const topMachine = serialCounts.length > 0 ? serialCounts[0] : null;
 
     const allErrorsFilteredByDate = rawData.filter(item => {
-         return selectedDate === 'All' || item.dateStr === selectedDate;
+         return selectedDate.length === 0 || selectedDate.includes(item.dateStr);
     });
 
     const totalRecordsInScope = allErrorsFilteredByDate.length;
@@ -578,7 +584,7 @@ const MachineErrorAnalysis = () => {
                                           Filter Date
                                       </Typography>
                                       <Typography variant="h6" fontWeight="bold" sx={{ fontFamily: 'monospace', color: 'primary.main', lineHeight: 1.2 }}>
-                                          {selectedDate}
+                                          {selectedDate.length === 0 ? 'All Dates' : `${selectedDate.length} Date${selectedDate.length > 1 ? 's' : ''} Selected`}
                                       </Typography>
                                   </Box>
                               </Grid>
