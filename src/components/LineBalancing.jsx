@@ -41,6 +41,10 @@ import {
     ReferenceLine,
     Cell
 } from 'recharts';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { Download, FileImage, FileText } from 'lucide-react';
+import { Menu } from '@mui/material';
 
 // Generates a random color for each new task to keep the chart colorful
 const getRandomColor = () => {
@@ -79,6 +83,50 @@ const LineBalancing = () => {
     // State
     const [targetTime, setTargetTime] = useState(60); // Default 60 seconds
     const [targetUnit, setTargetUnit] = useState('sec'); // 'sec' or 'min'
+    const [chartTitle, setChartTitle] = useState('Cycle Time Visualization');
+    
+    // Ref for capturing chart
+    const chartRef = React.useRef(null);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const openExportMenu = Boolean(anchorEl);
+
+    const handleExportClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleCloseExportMenu = () => {
+        setAnchorEl(null);
+    };
+
+    const handleExport = async (format) => {
+        handleCloseExportMenu();
+        if (!chartRef.current) return;
+
+        try {
+            const canvas = await html2canvas(chartRef.current, {
+                backgroundColor: '#1e293b', // Match dark theme background
+                scale: 2, // Improve quality
+            });
+
+            if (format === 'pdf') {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'px',
+                    format: [canvas.width, canvas.height]
+                });
+                pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                pdf.save(`${chartTitle || 'line-balancing-chart'}.pdf`);
+            } else {
+                const link = document.createElement('a');
+                link.download = `${chartTitle || 'line-balancing-chart'}.${format}`;
+                link.href = canvas.toDataURL(`image/${format === 'jpg' ? 'jpeg' : format}`);
+                link.click();
+            }
+        } catch (error) {
+            console.error('Export failed:', error);
+        }
+    };
     
     // Initial data structure for stations
     const [stations, setStations] = useState([
@@ -338,6 +386,48 @@ const LineBalancing = () => {
                     >
                         Add Station / Person
                     </Button>
+
+                    <Button
+                        variant="outlined"
+                        startIcon={<Download size={20} />}
+                        onClick={handleExportClick}
+                        sx={{
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            color: 'white',
+                            textTransform: 'none',
+                            '&:hover': {
+                                borderColor: 'white',
+                                bgcolor: 'rgba(255, 255, 255, 0.05)'
+                            }
+                        }}
+                    >
+                        Export
+                    </Button>
+                    <Menu
+                        anchorEl={anchorEl}
+                        open={openExportMenu}
+                        onClose={handleCloseExportMenu}
+                        slotProps={{
+                            paper: {
+                                sx: {
+                                    bgcolor: '#1e293b',
+                                    color: 'white',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    mt: 1
+                                }
+                            }
+                        }}
+                    >
+                        <MenuItem onClick={() => handleExport('png')} sx={{ gap: 1.5 }}>
+                            <FileImage size={18} className="text-blue-400" /> Export as PNG
+                        </MenuItem>
+                        <MenuItem onClick={() => handleExport('jpg')} sx={{ gap: 1.5 }}>
+                            <FileImage size={18} className="text-orange-400" /> Export as JPG
+                        </MenuItem>
+                        <MenuItem onClick={() => handleExport('pdf')} sx={{ gap: 1.5 }}>
+                            <FileText size={18} className="text-red-400" /> Export as PDF
+                        </MenuItem>
+                    </Menu>
                 </Stack>
             </Paper>
 
@@ -499,22 +589,46 @@ const LineBalancing = () => {
 
                 {/* RIGHT: Visual Chart */}
                 <Grid item size={{ xs: 12, md: 7 }}>
-                    <Typography variant="h6" fontWeight="bold" color="white" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <BarChart3 size={20} className="text-green-400" />
-                        Cycle Time Visualization ({targetUnit})
-                    </Typography>
                     <Paper 
+                        ref={chartRef}
                         elevation={0}
                         sx={{ 
                             p: 3, 
-                            bgcolor: 'rgba(30, 41, 59, 0.4)', 
+                            bgcolor: '#1e293b', // Fixed background for reliable export
+                            backgroundImage: 'linear-gradient(to bottom right, rgba(30, 41, 59, 1), rgba(15, 23, 42, 1))', 
                             backdropFilter: 'blur(12px)',
                             borderRadius: 3,
                             border: '1px solid',
                             borderColor: 'rgba(255, 255, 255, 0.1)',
-                            height: 500
+                            height: 600,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 2
                         }}
                     >
+                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1 }}>
+                            <TextField 
+                                value={chartTitle}
+                                onChange={(e) => setChartTitle(e.target.value)}
+                                variant="standard"
+                                size="small"
+                                placeholder="Enter chart title..."
+                                InputProps={{
+                                    disableUnderline: true,
+                                    style: { fontSize: '1.25rem', fontWeight: 'bold', color: 'white', textAlign: 'center' }
+                                }}
+                                sx={{ 
+                                    minWidth: 300,
+                                    '& .MuiInputBase-input': { 
+                                        textAlign: 'center',
+                                        transition: 'opacity 0.2s',
+                                        '&:hover': { opacity: 0.8 }
+                                    }
+                                }}
+                            />
+                        </Box>
+                        
+                        <Box sx={{ flexGrow: 1, width: '100%', minHeight: 0 }}>
                         <ResponsiveContainer width="100%" height="100%">
 
                             <BarChart data={robustChartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
@@ -579,6 +693,7 @@ const LineBalancing = () => {
 
                             </BarChart>
                         </ResponsiveContainer>
+                        </Box>
                     </Paper>
                 </Grid>
             </Grid>

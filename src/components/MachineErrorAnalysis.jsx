@@ -23,10 +23,10 @@ const MachineErrorAnalysis = () => {
   const [selectedSerial, setSelectedSerial] = useState(null);
   const [selectedDate, setSelectedDate] = useState('All'); 
   const [isDataLoaded, setIsDataLoaded] = useState(false);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false); // Renamed in logic, but state name kept for simplicity or can be generic
   const dashboardRef = useRef(null);
   
-  const handleDownloadPDF = async () => {
+  const handleExport = async (format) => {
     if (!dashboardRef.current) {
         alert("Dashboard content not found.");
         return;
@@ -40,35 +40,43 @@ const MachineErrorAnalysis = () => {
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: '#0f172a' // Updated to Slate 900
+        backgroundColor: '#0f172a' // Slate 900
       });
 
-      const imgData = canvas.toDataURL('image/png');
-      
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      if (format === 'pdf') {
+          const imgData = canvas.toDataURL('image/png');
+          
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          
+          const imgWidth = pdfWidth;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      let heightLeft = imgHeight;
-      let position = 0;
+          let heightLeft = imgHeight;
+          let position = 0;
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pdfHeight;
 
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
+          while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
+          }
+
+          pdf.save(`machine_error_analysis_${targetError}_${getFormattedDate()}.pdf`);
+      } else {
+          // PNG or JPG
+          const link = document.createElement('a');
+          link.download = `machine_error_analysis_${targetError}_${getFormattedDate()}.${format}`;
+          link.href = canvas.toDataURL(`image/${format === 'jpg' ? 'jpeg' : format}`);
+          link.click();
       }
-
-      pdf.save(`machine_error_analysis_${targetError}_${getFormattedDate()}.pdf`);
     } catch (error) {
-      console.error("PDF Generation Error:", error);
-      alert("Failed to generate PDF. Please try again.");
+      console.error("Export Error:", error);
+      alert("Failed to export. Please try again.");
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -472,7 +480,7 @@ const MachineErrorAnalysis = () => {
           <Grid item size={{ xs: 12 }} sx={{ width: '100%' }}>
               <Header 
                 isDataLoaded={isDataLoaded}
-                handleDownloadPDF={handleDownloadPDF}
+                handleExport={handleExport}
                 isGeneratingPdf={isGeneratingPdf}
                 handleFileUpload={handleFileUpload}
                 getFormattedDate={getFormattedDate}

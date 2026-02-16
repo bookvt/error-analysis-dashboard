@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Label,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Label, LabelList,
   PieChart, Pie, Cell, Legend,
   LineChart, Line
 } from 'recharts';
@@ -294,7 +294,19 @@ const ChartsSection = ({
                                 dot={{ fill: '#10b981', r: 4, strokeWidth: 2, stroke: '#fff' }}
                                 activeDot={{ r: 6, strokeWidth: 0, fill: '#34d399' }}
                                 animationDuration={1000}
-                            />
+                            >
+                                <LabelList 
+                                    dataKey="count" 
+                                    position="top" 
+                                    offset={10} 
+                                    style={{ 
+                                        fill: '#e2e8f0', 
+                                        fontSize: '11px', 
+                                        fontWeight: 'bold' 
+                                    }} 
+                                    formatter={(value) => value > 0 ? value : ''}
+                                />
+                            </Line>
                         </LineChart>
                     </ResponsiveContainer>
                 </Box>

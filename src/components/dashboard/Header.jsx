@@ -1,19 +1,34 @@
-import React, { useRef } from 'react';
-import { Activity, Download, Loader2, Upload, FileSpreadsheet, ShieldCheck } from 'lucide-react';
-import { Box, Button, Typography, Paper, Stack } from '@mui/material';
+import React, { useRef, useState } from 'react';
+import { Activity, Download, Loader2, Upload, FileImage, FileText, ShieldCheck } from 'lucide-react';
+import { Box, Button, Typography, Paper, Stack, Menu, MenuItem } from '@mui/material';
 
 const Header = ({ 
   isDataLoaded, 
-  handleDownloadPDF, 
+  handleExport, 
   handleFileUpload,
   isGeneratingPdf 
 }) => {
   const fileInputRef = useRef(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const openExportMenu = Boolean(anchorEl);
 
   const handleUploadClick = () => {
     if (fileInputRef.current) {
         fileInputRef.current.click();
     }
+  };
+
+  const handleExportClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseExportMenu = () => {
+    setAnchorEl(null);
+  };
+
+  const onExportSelect = (format) => {
+    handleCloseExportMenu();
+    handleExport(format);
   };
 
   return (
@@ -63,30 +78,57 @@ const Header = ({
       
       <Stack direction="row" spacing={2} flexWrap="wrap">
          {isDataLoaded && (
-            <Button
-                variant="contained"
-                onClick={handleDownloadPDF}
-                disabled={isGeneratingPdf}
-                startIcon={isGeneratingPdf ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />}
-                sx={{ 
-                    bgcolor: 'rgba(255, 255, 255, 0.05)', 
-                    color: 'white',
-                    border: '1px solid',
-                    borderColor: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(4px)',
-                    textTransform: 'none',
-                    fontWeight: 'bold',
-                    py: 1,
-                    px: 3,
-                    borderRadius: 2,
-                    '&:hover': { 
-                        bgcolor: 'rgba(255, 255, 255, 0.1)',
-                        borderColor: 'rgba(255, 255, 255, 0.2)'
-                    } 
-                }}
-            >
-                {isGeneratingPdf ? 'Generating PDF...' : 'Export PDF'}
-            </Button>
+            <>
+                <Button
+                    variant="contained"
+                    onClick={handleExportClick}
+                    disabled={isGeneratingPdf}
+                    startIcon={isGeneratingPdf ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />}
+                    sx={{ 
+                        bgcolor: 'rgba(255, 255, 255, 0.05)', 
+                        color: 'white',
+                        border: '1px solid',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(4px)',
+                        textTransform: 'none',
+                        fontWeight: 'bold',
+                        py: 1,
+                        px: 3,
+                        borderRadius: 2,
+                        '&:hover': { 
+                            bgcolor: 'rgba(255, 255, 255, 0.1)',
+                            borderColor: 'rgba(255, 255, 255, 0.2)'
+                        } 
+                    }}
+                >
+                    {isGeneratingPdf ? 'Exporting...' : 'Export'}
+                </Button>
+                <Menu
+                    anchorEl={anchorEl}
+                    open={openExportMenu}
+                    onClose={handleCloseExportMenu}
+                    slotProps={{
+                        paper: {
+                            sx: {
+                                bgcolor: '#1e293b',
+                                color: 'white',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                mt: 1
+                            }
+                        }
+                    }}
+                >
+                    <MenuItem onClick={() => onExportSelect('png')} sx={{ gap: 1.5 }}>
+                        <FileImage size={18} className="text-blue-400" /> Export as PNG
+                    </MenuItem>
+                    <MenuItem onClick={() => onExportSelect('jpg')} sx={{ gap: 1.5 }}>
+                        <FileImage size={18} className="text-orange-400" /> Export as JPG
+                    </MenuItem>
+                    <MenuItem onClick={() => onExportSelect('pdf')} sx={{ gap: 1.5 }}>
+                        <FileText size={18} className="text-red-400" /> Export as PDF
+                    </MenuItem>
+                </Menu>
+            </>
          )}
          
          <input
