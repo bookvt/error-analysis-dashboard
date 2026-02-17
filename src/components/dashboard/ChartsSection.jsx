@@ -233,18 +233,80 @@ const ChartsSection = ({
                       </Box>
                       Error Trend Over Time
                   </Typography>
-                  <Box sx={{ mt: 2, ml: 5.5, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                      <Box sx={{ bgcolor: 'rgba(15, 23, 42, 0.5)', px: 1.5, py: 0.5, borderRadius: 1.5, border: '1px solid', borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                          <Typography variant="caption" color="text.secondary" sx={{ mr: 1, textTransform: 'uppercase', fontWeight: 'bold' }}>Error Code:</Typography>
-                          <Typography variant="body2" component="span" fontWeight="bold" sx={{ color: '#34d399' }}>
-                              {selectedErrorLabel}
-                          </Typography>
+                  <Box sx={{ mt: 2, ml: 5.5, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', width: '100%', pr: 4 }}>
+                      <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Box sx={{ bgcolor: 'rgba(15, 23, 42, 0.5)', px: 1.5, py: 0.5, borderRadius: 1.5, border: '1px solid', borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ mr: 1, textTransform: 'uppercase', fontWeight: 'bold' }}>Error Code:</Typography>
+                            <Typography variant="body2" component="span" fontWeight="bold" sx={{ color: '#34d399' }}>
+                                {selectedErrorLabel}
+                            </Typography>
+                        </Box>
+                        <Box sx={{ bgcolor: 'rgba(15, 23, 42, 0.5)', px: 1.5, py: 0.5, borderRadius: 1.5, border: '1px solid', borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ mr: 1, textTransform: 'uppercase', fontWeight: 'bold' }}>Machine:</Typography>
+                            <Typography variant="body2" component="span" fontWeight="bold" sx={{ color: '#60a5fa' }}>
+                                {selectedSerial ? getMachineName(selectedSerial) : 'All Machines'}
+                            </Typography>
+                        </Box>
                       </Box>
-                      <Box sx={{ bgcolor: 'rgba(15, 23, 42, 0.5)', px: 1.5, py: 0.5, borderRadius: 1.5, border: '1px solid', borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                          <Typography variant="caption" color="text.secondary" sx={{ mr: 1, textTransform: 'uppercase', fontWeight: 'bold' }}>Machine:</Typography>
-                          <Typography variant="body2" component="span" fontWeight="bold" sx={{ color: '#60a5fa' }}>
-                              {selectedSerial ? getMachineName(selectedSerial) : 'All Machines'}
-                          </Typography>
+                      
+                      {/* Stats Display */}
+                      <Box sx={{ display: 'flex', gap: 2 }}>
+                        {/* AVG Box */}
+                        <Box sx={{ 
+                            bgcolor: 'rgba(15, 23, 42, 0.5)', 
+                            px: 1.5, 
+                            py: 0.5, 
+                            borderRadius: 1.5, 
+                            border: '1px solid', 
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            display: 'flex',
+                            alignItems: 'center'
+                        }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ mr: 1, textTransform: 'uppercase', fontWeight: 'bold' }}>AVG:</Typography>
+                            <Typography variant="body2" component="span" fontWeight="bold" sx={{ color: '#fbbf24' }}>
+                                {processedData.lineChartData && processedData.lineChartData.length > 0 
+                                    ? (processedData.lineChartData.reduce((acc, curr) => acc + curr.count, 0) / processedData.lineChartData.length).toFixed(1)
+                                    : 0}
+                            </Typography>
+                        </Box>
+
+                        {/* MIN Box */}
+                        <Box sx={{ 
+                            bgcolor: 'rgba(15, 23, 42, 0.5)', 
+                            px: 1.5, 
+                            py: 0.5, 
+                            borderRadius: 1.5, 
+                            border: '1px solid', 
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            display: 'flex',
+                            alignItems: 'center'
+                        }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ mr: 1, textTransform: 'uppercase', fontWeight: 'bold' }}>MIN:</Typography>
+                            <Typography variant="body2" component="span" fontWeight="bold" sx={{ color: '#34d399' }}>
+                                {processedData.lineChartData && processedData.lineChartData.length > 0 
+                                    ? Math.min(...processedData.lineChartData.map(d => d.count))
+                                    : 0}
+                            </Typography>
+                        </Box>
+
+                        {/* MAX Box */}
+                        <Box sx={{ 
+                            bgcolor: 'rgba(15, 23, 42, 0.5)', 
+                            px: 1.5, 
+                            py: 0.5, 
+                            borderRadius: 1.5, 
+                            border: '1px solid', 
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            display: 'flex',
+                            alignItems: 'center'
+                        }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ mr: 1, textTransform: 'uppercase', fontWeight: 'bold' }}>MAX:</Typography>
+                            <Typography variant="body2" component="span" fontWeight="bold" sx={{ color: '#f87171' }}>
+                                {processedData.lineChartData && processedData.lineChartData.length > 0 
+                                    ? Math.max(...processedData.lineChartData.map(d => d.count))
+                                    : 0}
+                            </Typography>
+                        </Box>
                       </Box>
                   </Box>
                 </Box>
